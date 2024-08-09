@@ -9,15 +9,20 @@ test.describe("Product", () => {
     test("Add to product to cart", async ({ page, baseURL, product, cart }) => {
         await expect(page).toHaveURL(`${baseURL!}${product.url}`);
 
-        await product.addToCart();
-        await product.cartLink.click();
+        await test.step("Add products to cart", async () => {
+            await product.addSpecificProduct();
+            await product.addProduct("random");
+            await product.cartLink.click();
+        });
 
-        await cart.waitUrl();
+        await test.step("Navigate and verify products were added to cart", async () => {
+            await cart.waitUrl();
 
-        await expect(cart.title).toHaveText("Your Cart");
+            await expect(cart.title).toHaveText("Your Cart");
 
-        const cartItems = await cart.items();
+            const cartItems = await cart.items();
 
-        expect(cartItems).toHaveLength(2);
+            expect(cartItems).toHaveLength(2);
+        });
     });
 });

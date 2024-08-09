@@ -14,7 +14,9 @@ test.describe("Cart Page", () => {
 
         await expect(page).toHaveURL(`${baseURL!}${product.url}`);
 
-        await product.addToCart();
+        await product.addSpecificProduct();
+        await product.addProduct("random");
+
         await product.cartLink.click();
 
         await cart.waitUrl();
@@ -54,25 +56,24 @@ test.describe("Cart Page", () => {
             success: true,
         },
     ].forEach(({ error, infoFields, name, success }) => {
-        let expectedStatus = " - ";
-
-        if (success) expectedStatus = `Successful${expectedStatus}`;
-        else if (error) expectedStatus = `Failure${expectedStatus}`;
-        else expectedStatus = "";
-
-        test(`${expectedStatus}Checkout the product w/ ${name}`, async ({
+        test(`${
+            success ? "Successful" : "Failure"
+        } - Checkout the product w/ ${name}`, async ({
             cart,
             checkout,
             checkoutOverview,
+            checkoutComplete,
             page,
         }) => {
-            await cart.checkoutBtn.click();
-            await checkout.waitUrl();
+            await test.step("Checkout products and fill information and continue", async () => {
+                await cart.checkoutBtn.click();
+                await checkout.waitUrl();
 
-            await expect(checkout.title).toHaveText(/Your Information/);
+                await expect(checkout.title).toHaveText(/Your Information/);
 
-            await checkout.fillInfoFields(infoFields);
-            await checkout.continueBtn.click();
+                await checkout.fillInfoFields(infoFields);
+                await checkout.continueBtn.click();
+            });
 
             if (error) {
                 const [errLocator, closeBtn] = await checkout.error(error);
@@ -82,24 +83,35 @@ test.describe("Cart Page", () => {
             }
 
             if (success) {
-                await checkoutOverview.waitUrl();
+                await test.step("Navigate to checkout overview", async () => {
+                    await checkoutOverview.waitUrl();
 
-                await expect(page).toHaveURL(checkoutOverview.url);
-                await expect(checkoutOverview.title).toHaveText(/Overview/);
+                    await expect(page).toHaveURL(checkoutOverview.url);
+                    await expect(checkoutOverview.title).toHaveText(/Overview/);
+                });
 
-                const items = await cart.items();
+                await test.step("Verify the items in the page and the subtotal", async () => {
+                    const items = await cart.items();
 
-                for (let item of items) {
-                    await expect(item).toBeVisible();
-                }
+                    for (let item of items) await expect(item).toBeVisible();
 
-                const subTotal = await cart.getSubTotalFromItems();
+                    const subTotal = await cart.getSubTotalFromItems();
 
-                await expect(checkoutOverview.subtotal).toHaveText(
-                    `Item total: $${subTotal}`
-                );
+                    await expect(checkoutOverview.subtotal).toHaveText(
+                        `Item total: $${subTotal}`
+                    );
 
-                await checkoutOverview.finishBtn.click();
+                    await checkoutOverview.finishBtn.click();
+                });
+
+                await test.step("Complete the order process", async () => {
+                    await checkoutComplete.waitUrl();
+
+                    await expect(checkoutComplete.title).toHaveText(/Complete/);
+                    await expect(page).toHaveURL(checkoutComplete.url);
+                    await expect(checkoutComplete.message).toBeVisible();
+                    await expect(checkoutComplete.backHomeBtn).toBeVisible();
+                });
             }
         });
     });

@@ -5,6 +5,7 @@ import {
     CartPage,
     CheckoutOverviewPage,
     CheckoutPage,
+    CheckoutCompletePage,
 } from "../pages";
 
 const test = base.extend<{
@@ -13,6 +14,7 @@ const test = base.extend<{
     cart: CartPage;
     checkout: CheckoutPage;
     checkoutOverview: CheckoutOverviewPage;
+    checkoutComplete: CheckoutCompletePage;
 }>({
     signIn: async ({ page }, use) => {
         await use(new SignInPage(page));
@@ -28,6 +30,9 @@ const test = base.extend<{
     },
     checkoutOverview: async ({ page }, use) => {
         await use(new CheckoutOverviewPage(page));
+    },
+    checkoutComplete: async ({ page }, use) => {
+        await use(new CheckoutCompletePage(page));
     },
 });
 
