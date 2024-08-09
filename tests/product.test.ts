@@ -17,12 +17,16 @@ test.describe("Product", () => {
 
         await test.step("Navigate and verify products were added to cart", async () => {
             await cart.waitUrl();
+            const totalNumberOfProducts = 2;
 
             await expect(cart.title).toHaveText("Your Cart");
 
             const cartItems = await cart.items();
 
-            expect(cartItems).toHaveLength(2);
+            expect(cartItems).toHaveLength(totalNumberOfProducts);
+            await expect(cart.cartBadge).toHaveText(
+                totalNumberOfProducts.toString()
+            );
         });
     });
 });
