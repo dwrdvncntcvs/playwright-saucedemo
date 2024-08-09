@@ -1,4 +1,5 @@
 import { chromium, type FullConfig } from "@playwright/test";
+import fs from "node:fs/promises";
 
 export default async function globalTeardown(config: FullConfig) {
     const { baseURL } = config.projects[0].use;
@@ -12,5 +13,6 @@ export default async function globalTeardown(config: FullConfig) {
     await page.locator("#reset_sidebar_link").click();
     await page.locator("#logout_sidebar_link").click();
 
+    await fs.unlink("./state.json");
     await browser.close();
 }
